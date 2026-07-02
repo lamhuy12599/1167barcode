@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1167 Trương Định, Ghi Chú & Quét Barcode</title>
+    <title>1167 Trương Định, Checker & Note</title>
     
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/7-eleven_logo.svg/1280px-7-eleven_logo.svg.png">
     
@@ -51,7 +51,7 @@
         .theme-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; border-radius: 50%; }
 
         .app-body { padding: 20px; }
-        .status-bar { text-align: center; font-size: 13px; font-weight: 600; padding: 8px; border-radius: 6px; margin-bottom: 20px; background: #e8f5e9; color: var(--7e-green); }
+        .status-bar { text-align: center; font-size: 13px; font-weight: 600; padding: 8px; border-radius: 6px; margin-bottom: 20px; background: #e8f5e9; color: var(--7e-green); transition: 0.3s; }
 
         .form-group { margin-bottom: 15px; }
         label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: block; }
@@ -65,7 +65,7 @@
         
         #reader { width: 100%; border-radius: 8px; overflow: hidden; margin-top: 10px; }
 
-        /* Danh sách tạm (Làm lại theo style Lịch sử tra cứu cũ nhưng tối ưu hiển thị Barcode sọc) */
+        /* Danh sách tạm */
         .history-section { margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 15px; }
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .history-header h3 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
@@ -99,14 +99,14 @@
 
         <div class="form-group">
             <label>Mã Vạch Sản Phẩm</label>
-            <input type="text" id="barcodeInput" placeholder="Nhập mã hoặc quét camera...">
+            <input type="text" id="barcodeInput" placeholder="Nhập mã hoặc quét camera..." autocomplete="off">
             <button class="btn btn-scan" onclick="startScan()">📷 BẬT MÁY QUÉT</button>
             <div id="reader"></div>
         </div>
 
         <div class="form-group">
-            <label>Tên Sản Phẩm (Dropdown Chọn nhanh)</label>
-            <input list="productDataList" id="nameInput" placeholder="Nhập tên sản phẩm để chọn nhanh...">
+            <label>Tên Sản Phẩm (Chọn nhanh)</label>
+            <input list="productDataList" id="nameInput" placeholder="Gõ tên sản phẩm để chọn nhanh..." autocomplete="off">
             <datalist id="productDataList"></datalist>
         </div>
 
@@ -122,8 +122,8 @@
 </div>
 
 <script>
-    // Link Google Sheet API Apps Script của bạn
-    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzqLh2BkY03a_U8edoXOHMo_n4RM4sLwpbiaR0YCHStiNRV3DDIN4pQS2M2CmuM7vQcQg/exec"; 
+    // Link Google Sheet API Apps Script của bạn - THAY TẠI ĐÂY
+    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycby2fePHX9GyMHaDqtQZ77C3gzdIby8grIbfHatOlrABvwEyCdbkCGbKkeGIfgLK0d_2CQ/exec"; 
     
     let products = []; 
     let html5QrCode; 
@@ -144,13 +144,22 @@
         document.getElementById('themeIcon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // --- KẾT NỐI DATABASE GOOGLE SHEET (Dữ liệu gốc) ---
+    // --- KẾT NỐI DATABASE GOOGLE SHEET (Sửa triệt để lỗi undefined) ---
     async function loadDatabaseFromSheet() {
         const statusDiv = document.getElementById('loadingStatus');
         try {
             const response = await fetch(GOOGLE_SHEET_API);
-            products = await response.json();
+            const rawData = await response.json();
             
+            // Ép kiểu chuẩn hóa để tránh lệch tên cột thuộc tính
+            products = rawData.map(item => {
+                const keys = Object.keys(item);
+                return {
+                    Barcode: item[keys[0]] ? String(item[keys[0]]).trim() : "",
+                    ProductName: item[keys[1]] ? String(item[keys[1]]).trim() : "Sản phẩm không tên"
+                };
+            }).filter(p => p.Barcode !== "");
+
             const datalist = document.getElementById('productDataList');
             datalist.innerHTML = ""; 
             products.forEach(p => {
@@ -164,25 +173,20 @@
             statusDiv.innerText = "✅ Kết nối Database thành công!";
             setTimeout(() => { statusDiv.style.display = "none"; }, 2500); 
         } catch (error) {
+            console.error("Lỗi kết nối:", error);
             statusDiv.style.background = "#ffebee";
             statusDiv.style.color = "var(--7e-red)";
-            statusDiv.innerText = "❌ Lỗi kết nối máy chủ / Dùng DB mẫu";
-            
-            // Database dự phòng nếu lỗi kết nối
-            products = [
-                {Barcode: "8934563123456", ProductName: "Mì Ly Cung Đình"},
-                {Barcode: "8935001234567", ProductName: "Nước Ngọt Coca-Cola"}
-            ];
+            statusDiv.innerText = "❌ Lỗi kết nối máy chủ!";
         }
     }
 
     // --- XỬ LÝ SỰ KIỆN NHẬP LIỆU ---
-    // 1. Khi gõ tay hoặc dùng súng quét quét vào ô Barcode (Nhấn Enter)
+    // 1. Máy quét phần cứng / Nhập tay nhấn Enter
     document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const barcode = this.value.trim();
             if (barcode) {
-                const found = products.find(p => String(p.Barcode) === barcode);
+                const found = products.find(p => String(p.Barcode) === String(barcode));
                 const name = found ? found.ProductName : "Sản phẩm mới (Không có trong DB)";
                 addItemToList(barcode, name);
                 this.value = '';
@@ -190,18 +194,18 @@
         }
     });
 
-    // 2. Khi chọn sản phẩm từ ô Dropdown Tên sản phẩm
+    // 2. Chọn nhanh bằng Dropdown tên
     document.getElementById('nameInput').addEventListener('input', function() {
         const nameVal = this.value.trim();
         const found = products.find(p => p.ProductName.toLowerCase() === nameVal.toLowerCase());
         if (found) {
             addItemToList(String(found.Barcode), found.ProductName);
-            this.value = ''; // Reset ô nhập ngay lập tức
+            this.value = ''; 
             document.getElementById('barcodeInput').focus();
         }
     });
 
-    // --- CAMERA QUET MÃ ---
+    // --- CAMERA QUÉT MÃ ---
     function startScan() {
         if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
         const config = { fps: 15, qrbox: { width: 280, height: 100 } };
@@ -210,7 +214,7 @@
             { facingMode: "environment" }, 
             config,
             (decodedText) => {
-                const found = products.find(p => String(p.Barcode) === decodedText);
+                const found = products.find(p => String(p.Barcode) === String(decodedText));
                 const name = found ? found.ProductName : "Sản phẩm mới (Không có trong DB)";
                 addItemToList(decodedText, name);
                 
@@ -228,7 +232,7 @@
     function addItemToList(barcode, name) {
         const uniqueId = 'bc_' + Math.random().toString(36).substr(2, 9);
         
-        // Đẩy lên đầu danh sách tạm
+        // Thêm lên đầu danh sách
         scannedList.unshift({ id: uniqueId, barcode: barcode, name: name });
         localStorage.setItem('scannedList', JSON.stringify(scannedList));
         renderScannedList();
@@ -260,7 +264,7 @@
             `;
             listEl.appendChild(li);
 
-            // Vẽ sọc barcode hoàn chỉnh bằng thư viện JsBarcode
+            // Vẽ sọc barcode
             setTimeout(() => {
                 try {
                     JsBarcode(`#${item.id}`, String(item.barcode), {
@@ -268,12 +272,12 @@
                         lineColor: "#000",
                         width: 1.8,
                         height: 45,
-                        displayValue: true, // Hiển thị số nhỏ dưới chân sọc
+                        displayValue: true, 
                         fontSize: 13,
                         margin: 2
                     });
                 } catch (e) {
-                    document.getElementById(item.id).outerHTML = `<span style="color:var(--7e-red); font-size:12px; font-mono">Mã lỗi: ${item.barcode}</span>`;
+                    document.getElementById(item.id).outerHTML = `<span style="color:var(--7e-red); font-size:12px;">Mã lỗi: ${item.barcode}</span>`;
                 }
             }, 5);
         });
@@ -287,7 +291,6 @@
         }
     }
 
-    // --- KHỞI CHẠY ---
     window.onload = () => {
         initTheme();
         renderScannedList();
