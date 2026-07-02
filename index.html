@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1167 Trương Định, Checker & Note</title>
+    <title>1167 Trương Định, Checker & Shelf Note</title>
     
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/7-eleven_logo.svg/1280px-7-eleven_logo.svg.png">
     
@@ -65,20 +65,24 @@
         
         #reader { width: 100%; border-radius: 8px; overflow: hidden; margin-top: 10px; }
 
-        /* Danh sách tạm */
+        /* Khối danh sách tổng */
         .history-section { margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 15px; }
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .history-header h3 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
         .btn-clear-history { background: none; border: none; color: var(--7e-red); font-size: 13px; cursor: pointer; font-weight: bold; }
         
-        .history-list { list-style: none; max-height: 400px; overflow-y: auto; }
-        .history-item { background: var(--input-bg); border: 1px solid var(--border-color); margin-bottom: 10px; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        /* Đóng khung bo góc riêng cho từng KỆ */
+        .shelf-block { border: 2px solid var(--7e-green); border-radius: 14px; padding: 12px; margin-bottom: 20px; background: var(--bg-card); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .shelf-title { font-size: 14px; font-weight: 800; color: white; background-color: var(--7e-green); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .history-list { list-style: none; }
+        .history-item { background: var(--input-bg); border: 1px solid var(--border-color); margin-bottom: 10px; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: 0.2s; }
+        .history-item:last-child { margin-bottom: 0; }
         
         .item-info { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted var(--border-color); padding-bottom: 6px; }
-        .hist-name { font-weight: 700; font-size: 15px; color: var(--text-main); max-width: 75%; }
+        .hist-name { font-weight: 700; font-size: 15px; color: var(--text-main); max-width: 80%; }
         .hist-count { font-size: 11px; background: var(--border-color); color: var(--text-muted); padding: 2px 6px; border-radius: 20px; font-weight: bold; }
         
-        /* Container bọc hình sọc mã vạch */
         .barcode-box { background: white; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #eee; width: 100%; display: flex; justify-content: center; }
         .barcode-box svg { max-width: 100%; height: auto; }
     </style>
@@ -98,6 +102,11 @@
         <div id="loadingStatus" class="status-bar">🔄 Đang đồng bộ máy chủ...</div>
 
         <div class="form-group">
+            <label style="color: var(--7e-green);">📍 Vị trí / Tên Kệ đang quét</label>
+            <input type="text" id="shelfInput" placeholder="Ví dụ: Kệ Gạo, Tủ Mát 1, Kệ A1..." style="border-color: var(--7e-green); font-weight: bold;">
+        </div>
+
+        <div class="form-group">
             <label>Mã Vạch Sản Phẩm</label>
             <input type="text" id="barcodeInput" placeholder="Nhập mã hoặc quét camera..." autocomplete="off">
             <button class="btn btn-scan" onclick="startScan()">📷 BẬT MÁY QUÉT</button>
@@ -112,18 +121,19 @@
 
         <div class="history-section">
             <div class="history-header">
-                <h3>Danh sách tạm (<span id="itemCount">0</span>)</h3>
+                <h3>Báo cáo tạm (<span id="itemCount">0</span> mã)</h3>
                 <button class="btn-clear-history" onclick="clearAllList()">🗑️ Xóa tất cả</button>
             </div>
-            <ul class="history-list" id="scannedListContainer">
-                </ul>
+            
+            <div id="shelvesContainer">
+                </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Link Google Sheet API Apps Script của bạn - THAY TẠI ĐÂY
-    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycby2fePHX9GyMHaDqtQZ77C3gzdIby8grIbfHatOlrABvwEyCdbkCGbKkeGIfgLK0d_2CQ/exec"; 
+    // Link Google Sheet API Apps Script của bạn
+    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzIXfDD-sM0anPvkNMh9RsIcK53VbMsVv035Ke7cS7HPk_Jj3CT0H9Cc1LeHAeflsdH/exec"; 
     
     let products = []; 
     let html5QrCode; 
@@ -144,14 +154,13 @@
         document.getElementById('themeIcon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // --- KẾT NỐI DATABASE GOOGLE SHEET (Sửa triệt để lỗi undefined) ---
+    // --- KẾT NỐI DATABASE GOOGLE SHEET ---
     async function loadDatabaseFromSheet() {
         const statusDiv = document.getElementById('loadingStatus');
         try {
             const response = await fetch(GOOGLE_SHEET_API);
             const rawData = await response.json();
             
-            // Ép kiểu chuẩn hóa để tránh lệch tên cột thuộc tính
             products = rawData.map(item => {
                 const keys = Object.keys(item);
                 return {
@@ -181,7 +190,6 @@
     }
 
     // --- XỬ LÝ SỰ KIỆN NHẬP LIỆU ---
-    // 1. Máy quét phần cứng / Nhập tay nhấn Enter
     document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const barcode = this.value.trim();
@@ -194,7 +202,6 @@
         }
     });
 
-    // 2. Chọn nhanh bằng Dropdown tên
     document.getElementById('nameInput').addEventListener('input', function() {
         const nameVal = this.value.trim();
         const found = products.find(p => p.ProductName.toLowerCase() === nameVal.toLowerCase());
@@ -228,63 +235,91 @@
         });
     }
 
-    // --- QUẢN LÝ DANH SÁCH TẠM ---
+    // --- QUẢN LÝ DANH SÁCH TẠM & PHÂN THEO KỆ ---
     function addItemToList(barcode, name) {
         const uniqueId = 'bc_' + Math.random().toString(36).substr(2, 9);
         
-        // Thêm lên đầu danh sách
-        scannedList.unshift({ id: uniqueId, barcode: barcode, name: name });
+        // Lấy tên kệ hiện tại, nếu trống thì mặc định là "Kệ chung"
+        let shelfName = document.getElementById('shelfInput').value.trim();
+        if (!shelfName) shelfName = "Kệ chung";
+
+        // Lưu thêm thuộc tính shelf vào danh sách
+        scannedList.unshift({ id: uniqueId, barcode: barcode, name: name, shelf: shelfName });
         localStorage.setItem('scannedList', JSON.stringify(scannedList));
         renderScannedList();
     }
 
     function renderScannedList() {
-        const listEl = document.getElementById('scannedListContainer');
+        const container = document.getElementById('shelvesContainer');
         const countEl = document.getElementById('itemCount');
-        listEl.innerHTML = "";
+        container.innerHTML = "";
         
         countEl.innerText = scannedList.length;
 
         if (scannedList.length === 0) {
-            listEl.innerHTML = "<li style='text-align:center; color:#aaa; font-size:13px; padding: 20px 0;'>Chưa có sản phẩm nào được quét</li>";
+            container.innerHTML = "<div style='text-align:center; color:#aaa; font-size:13px; padding: 20px 0;'>Chưa có sản phẩm nào được quét</div>";
             return;
         }
 
+        // Bước toán học: Gom nhóm mảng scannedList theo thuộc tính 'shelf'
+        const groupedByShelf = {};
         scannedList.forEach((item, index) => {
-            const li = document.createElement('li');
-            li.className = 'history-item';
-            li.innerHTML = `
-                <div class="item-info">
-                    <span class="hist-name">${item.name}</span>
-                    <span class="hist-count">#${scannedList.length - index}</span>
-                </div>
-                <div class="barcode-box">
-                    <svg id="${item.id}"></svg>
-                </div>
-            `;
-            listEl.appendChild(li);
+            if (!groupedByShelf[item.shelf]) {
+                groupedByShelf[item.shelf] = [];
+            }
+            // Giữ lại số thứ tự gốc để hiển thị badge # số
+            groupedByShelf[item.shelf].push({ ...item, displayIndex: scannedList.length - index });
+        });
 
-            // Vẽ sọc barcode
-            setTimeout(() => {
-                try {
-                    JsBarcode(`#${item.id}`, String(item.barcode), {
-                        format: "CODE128",
-                        lineColor: "#000",
-                        width: 1.8,
-                        height: 45,
-                        displayValue: true, 
-                        fontSize: 13,
-                        margin: 2
-                    });
-                } catch (e) {
-                    document.getElementById(item.id).outerHTML = `<span style="color:var(--7e-red); font-size:12px;">Mã lỗi: ${item.barcode}</span>`;
-                }
-            }, 5);
+        // Vẽ giao diện đóng khung theo từng Kệ
+        Object.keys(groupedByShelf).forEach(shelfName => {
+            const shelfBlock = document.createElement('div');
+            shelfBlock.className = 'shelf-block';
+            
+            let itemsHtml = '';
+            groupedByShelf[shelfName].forEach(item => {
+                itemsHtml += `
+                    <li class="history-item">
+                        <div class="item-info">
+                            <span class="hist-name">${item.name}</span>
+                            <span class="hist-count">#${item.displayIndex}</span>
+                        </div>
+                        <div class="barcode-box">
+                            <svg id="${item.id}"></svg>
+                        </div>
+                    </li>
+                `;
+            });
+
+            shelfBlock.innerHTML = `
+                <div class="shelf-title">📍 ${shelfName}</div>
+                <ul class="history-list">${itemsHtml}</ul>
+            `;
+            container.appendChild(shelfBlock);
+
+            // Tiến hành render sọc barcode ngay sau khi chèn HTML vào DOM
+            groupedByShelf[shelfName].forEach(item => {
+                setTimeout(() => {
+                    try {
+                        JsBarcode(`#${item.id}`, String(item.barcode), {
+                            format: "CODE128",
+                            lineColor: "#000",
+                            width: 1.8,
+                            height: 42,
+                            displayValue: true, 
+                            fontSize: 13,
+                            margin: 2
+                        });
+                    } catch (e) {
+                        document.getElementById(item.id).outerHTML = `<span style="color:var(--7e-red); font-size:12px;">Mã lỗi: ${item.barcode}</span>`;
+                    }
+                }, 5);
+            });
         });
     }
 
     function clearAllList() {
-        if (confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ danh sách ghi chú tạm không?")) {
+        if (confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ danh sách tạm của tất cả các kệ không?")) {
             scannedList = [];
             localStorage.removeItem('scannedList');
             renderScannedList();
