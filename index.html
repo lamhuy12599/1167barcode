@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1167 Trương Định, Checker & Shelf Note</title>
+    <title>1167 Trương Định, Checker & Multi-Level Note</title>
     
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/7-eleven_logo.svg/1280px-7-eleven_logo.svg.png">
     
@@ -53,9 +53,12 @@
         .app-body { padding: 20px; }
         .status-bar { text-align: center; font-size: 13px; font-weight: 600; padding: 8px; border-radius: 6px; margin-bottom: 20px; background: #e8f5e9; color: var(--7e-green); transition: 0.3s; }
 
-        .form-group { margin-bottom: 15px; }
-        label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: block; }
-        input { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 15px; background: var(--input-bg); color: var(--text-main); transition: 0.3s; }
+        .form-group { margin-bottom: 12px; }
+        .row-inputs { display: flex; gap: 10px; }
+        .row-inputs .form-group { flex: 1; margin-bottom: 15px; }
+
+        label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
+        input { width: 100%; padding: 11px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-main); transition: 0.3s; }
         input:focus { border-color: var(--7e-green); outline: none; }
 
         .btn { width: 100%; padding: 14px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; transition: 0.2s; }
@@ -71,19 +74,25 @@
         .history-header h3 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
         .btn-clear-history { background: none; border: none; color: var(--7e-red); font-size: 13px; cursor: pointer; font-weight: bold; }
         
-        /* Đóng khung bo góc riêng cho từng KỆ */
-        .shelf-block { border: 2px solid var(--7e-green); border-radius: 14px; padding: 12px; margin-bottom: 20px; background: var(--bg-card); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .shelf-title { font-size: 14px; font-weight: 800; color: white; background-color: var(--7e-green); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* CẤP 1: KHUNG TOÀN CỤC BAO QUÁT (MÃ KỆ LỚN) */
+        .zone-block { border: 2.5px solid var(--7e-orange); border-radius: 16px; padding: 14px; margin-bottom: 25px; background: var(--bg-card); box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; }
+        .zone-title { font-size: 13px; font-weight: 800; color: white; background-color: var(--7e-orange); padding: 5px 14px; border-radius: 20px; display: inline-block; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* CẤP 2: KHUNG CON BÊN TRONG (TÊN KỆ NHỎ) */
+        .shelf-block { border: 1.5px solid var(--7e-green); border-radius: 12px; padding: 10px; margin-bottom: 12px; background: var(--bg-main); }
+        .shelf-block:last-child { margin-bottom: 0; }
+        .shelf-title { font-size: 12px; font-weight: 700; color: var(--7e-green); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; text-transform: uppercase;}
         
+        /* CẤP 3: THÀNH PHẦN SẢN PHẨM */
         .history-list { list-style: none; }
-        .history-item { background: var(--input-bg); border: 1px solid var(--border-color); margin-bottom: 10px; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: 0.2s; }
+        .history-item { background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 8px; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
         .history-item:last-child { margin-bottom: 0; }
         
-        .item-info { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted var(--border-color); padding-bottom: 6px; }
-        .hist-name { font-weight: 700; font-size: 15px; color: var(--text-main); max-width: 80%; }
-        .hist-count { font-size: 11px; background: var(--border-color); color: var(--text-muted); padding: 2px 6px; border-radius: 20px; font-weight: bold; }
+        .item-info { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted var(--border-color); padding-bottom: 4px; }
+        .hist-name { font-weight: 700; font-size: 14px; color: var(--text-main); max-width: 80%; }
+        .hist-count { font-size: 10px; background: var(--border-color); color: var(--text-muted); padding: 1px 5px; border-radius: 10px; font-weight: bold; }
         
-        .barcode-box { background: white; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #eee; width: 100%; display: flex; justify-content: center; }
+        .barcode-box { background: white; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid #eee; width: 100%; display: flex; justify-content: center; }
         .barcode-box svg { max-width: 100%; height: auto; }
     </style>
 </head>
@@ -101,11 +110,19 @@
     <div class="app-body">
         <div id="loadingStatus" class="status-bar">🔄 Đang đồng bộ máy chủ...</div>
 
-        <div class="form-group">
-            <label style="color: var(--7e-green);">📍 Vị trí / Tên Kệ đang quét</label>
-            <input type="text" id="shelfInput" placeholder="Ví dụ: Kệ Gạo, Tủ Mát 1, Kệ A1..." style="border-color: var(--7e-green); font-weight: bold;">
+        <!-- HÀNG INPUT PHÂN CẤP KỆ -->
+        <div class="row-inputs">
+            <div class="form-group">
+                <label style="color: var(--7e-orange);">📦 Mã Kệ Lớn (Vùng)</label>
+                <input type="text" id="zoneInput" placeholder="VD: ZONE-A, TỦ-LỚN..." style="border-color: var(--7e-orange); font-weight: bold;">
+            </div>
+            <div class="form-group">
+                <label style="color: var(--7e-green);">📍 Tên Kệ Nhỏ (Tầng)</label>
+                <input type="text" id="shelfInput" placeholder="VD: Tầng 1, Máng 2..." style="border-color: var(--7e-green); font-weight: bold;">
+            </div>
         </div>
 
+        <!-- Nhập / Quét mã -->
         <div class="form-group">
             <label>Mã Vạch Sản Phẩm</label>
             <input type="text" id="barcodeInput" placeholder="Nhập mã hoặc quét camera..." autocomplete="off">
@@ -113,20 +130,24 @@
             <div id="reader"></div>
         </div>
 
+        <!-- Chọn tên sản phẩm từ dropdown -->
         <div class="form-group">
             <label>Tên Sản Phẩm (Chọn nhanh)</label>
             <input list="productDataList" id="nameInput" placeholder="Gõ tên sản phẩm để chọn nhanh..." autocomplete="off">
             <datalist id="productDataList"></datalist>
         </div>
 
+        <!-- Vùng báo cáo đóng khung đa tầng -->
         <div class="history-section">
             <div class="history-header">
-                <h3>Báo cáo tạm (<span id="itemCount">0</span> mã)</h3>
+                <h3>Báo cáo cấu trúc kho (<span id="itemCount">0</span> mã)</h3>
                 <button class="btn-clear-history" onclick="clearAllList()">🗑️ Xóa tất cả</button>
             </div>
             
-            <div id="shelvesContainer">
-                </div>
+            <!-- Vùng hiển thị cấu trúc Mã Kệ Lớn lồng Tên Kệ Nhỏ -->
+            <div id="multiLevelContainer">
+                <!-- Data sinh tự động -->
+            </div>
         </div>
     </div>
 </div>
@@ -139,7 +160,6 @@
     let html5QrCode; 
     let scannedList = JSON.parse(localStorage.getItem('scannedList')) || [];
 
-    // --- DARK/LIGHT THEME ---
     function initTheme() {
         const savedTheme = localStorage.getItem('appTheme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -154,7 +174,6 @@
         document.getElementById('themeIcon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // --- KẾT NỐI DATABASE GOOGLE SHEET ---
     async function loadDatabaseFromSheet() {
         const statusDiv = document.getElementById('loadingStatus');
         try {
@@ -182,14 +201,13 @@
             statusDiv.innerText = "✅ Kết nối Database thành công!";
             setTimeout(() => { statusDiv.style.display = "none"; }, 2500); 
         } catch (error) {
-            console.error("Lỗi kết nối:", error);
             statusDiv.style.background = "#ffebee";
             statusDiv.style.color = "var(--7e-red)";
             statusDiv.innerText = "❌ Lỗi kết nối máy chủ!";
         }
     }
 
-    // --- XỬ LÝ SỰ KIỆN NHẬP LIỆU ---
+    // --- SỰ KIỆN ENTER / CHỌN ---
     document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const barcode = this.value.trim();
@@ -212,7 +230,6 @@
         }
     });
 
-    // --- CAMERA QUÉT MÃ ---
     function startScan() {
         if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
         const config = { fps: 15, qrbox: { width: 280, height: 100 } };
@@ -224,102 +241,115 @@
                 const found = products.find(p => String(p.Barcode) === String(decodedText));
                 const name = found ? found.ProductName : "Sản phẩm mới (Không có trong DB)";
                 addItemToList(decodedText, name);
-                
-                html5QrCode.stop().then(() => {
-                    document.getElementById('reader').innerHTML = ""; 
-                });
+                html5QrCode.stop().then(() => { document.getElementById('reader').innerHTML = ""; });
             },
             (errorMessage) => { }
-        ).catch(err => {
-            alert("Vui lòng cấp quyền Camera và sử dụng link HTTPS!");
-        });
+        ).catch(err => { alert("Vui lòng cấp quyền Camera!"); });
     }
 
-    // --- QUẢN LÝ DANH SÁCH TẠM & PHÂN THEO KỆ ---
+    // --- LOGIC XỬ LÝ LỒNG GHÉP 3 CẤP ---
     function addItemToList(barcode, name) {
         const uniqueId = 'bc_' + Math.random().toString(36).substr(2, 9);
         
-        // Lấy tên kệ hiện tại, nếu trống thì mặc định là "Kệ chung"
+        let zoneName = document.getElementById('zoneInput').value.trim();
+        if (!zoneName) zoneName = "Khu chung";
+
         let shelfName = document.getElementById('shelfInput').value.trim();
         if (!shelfName) shelfName = "Kệ chung";
 
-        // Lưu thêm thuộc tính shelf vào danh sách
-        scannedList.unshift({ id: uniqueId, barcode: barcode, name: name, shelf: shelfName });
+        // Lưu thông tin kèm theo cả cấp to (zone) và cấp nhỏ (shelf)
+        scannedList.unshift({ id: uniqueId, barcode: barcode, name: name, zone: zoneName, shelf: shelfName });
         localStorage.setItem('scannedList', JSON.stringify(scannedList));
         renderScannedList();
     }
 
     function renderScannedList() {
-        const container = document.getElementById('shelvesContainer');
+        const container = document.getElementById('multiLevelContainer');
         const countEl = document.getElementById('itemCount');
         container.innerHTML = "";
-        
         countEl.innerText = scannedList.length;
 
         if (scannedList.length === 0) {
-            container.innerHTML = "<div style='text-align:center; color:#aaa; font-size:13px; padding: 20px 0;'>Chưa có sản phẩm nào được quét</div>";
+            container.innerHTML = "<div style='text-align:center; color:#aaa; font-size:13px; padding: 20px 0;'>Chưa có dữ liệu phân tầng</div>";
             return;
         }
 
-        // Bước toán học: Gom nhóm mảng scannedList theo thuộc tính 'shelf'
-        const groupedByShelf = {};
+        // Tạo cấu trúc dữ liệu dạng cây: Zone -> Shelf -> Items
+        const treeData = {};
         scannedList.forEach((item, index) => {
-            if (!groupedByShelf[item.shelf]) {
-                groupedByShelf[item.shelf] = [];
+            const orgIndex = scannedList.length - index; // Số thứ tự đếm ngược chuẩn xác
+            
+            if (!treeData[item.zone]) {
+                treeData[item.zone] = {};
             }
-            // Giữ lại số thứ tự gốc để hiển thị badge # số
-            groupedByShelf[item.shelf].push({ ...item, displayIndex: scannedList.length - index });
+            if (!treeData[item.zone][item.shelf]) {
+                treeData[item.zone][item.shelf] = [];
+            }
+            treeData[item.zone][item.shelf].push({ ...item, displayIndex: orgIndex });
         });
 
-        // Vẽ giao diện đóng khung theo từng Kệ
-        Object.keys(groupedByShelf).forEach(shelfName => {
-            const shelfBlock = document.createElement('div');
-            shelfBlock.className = 'shelf-block';
-            
-            let itemsHtml = '';
-            groupedByShelf[shelfName].forEach(item => {
-                itemsHtml += `
-                    <li class="history-item">
-                        <div class="item-info">
-                            <span class="hist-name">${item.name}</span>
-                            <span class="hist-count">#${item.displayIndex}</span>
-                        </div>
-                        <div class="barcode-box">
-                            <svg id="${item.id}"></svg>
-                        </div>
-                    </li>
-                `;
+        // Vẽ giao diện theo cấu trúc cây
+        Object.keys(treeData).forEach(zoneName => {
+            // Tạo khung CẤP 1 (Mã Kệ Lớn - Viền Cam)
+            const zoneBlock = document.createElement('div');
+            zoneBlock.className = 'zone-block';
+            zoneBlock.innerHTML = `<div class="zone-title">📦 Mã kệ: ${zoneName}</div>`;
+
+            // Duyệt tiếp để tạo khung CẤP 2 bên trong (Tên Kệ Nhỏ - Viền Xanh)
+            Object.keys(treeData[zoneName]).forEach(shelfName => {
+                const shelfBlock = document.createElement('div');
+                shelfBlock.className = 'shelf-block';
+                shelfBlock.innerHTML = `<div class="shelf-title">📍 ${shelfName}</div>`;
+
+                const ul = document.createElement('ul');
+                ul.className = 'history-list';
+
+                // Thêm sản phẩm vào trong danh sách của Kệ nhỏ
+                treeData[zoneName][shelfName].forEach(item => {
+                    ul.innerHTML += `
+                        <li class="history-item">
+                            <div class="item-info">
+                                <span class="hist-name">${item.name}</span>
+                                <span class="hist-count">#${item.displayIndex}</span>
+                            </div>
+                            <div class="barcode-box">
+                                <svg id="${item.id}"></svg>
+                            </div>
+                        </li>
+                    `;
+                });
+
+                shelfBlock.appendChild(ul);
+                zoneBlock.appendChild(shelfBlock);
             });
 
-            shelfBlock.innerHTML = `
-                <div class="shelf-title">📍 ${shelfName}</div>
-                <ul class="history-list">${itemsHtml}</ul>
-            `;
-            container.appendChild(shelfBlock);
+            container.appendChild(zoneBlock);
 
-            // Tiến hành render sọc barcode ngay sau khi chèn HTML vào DOM
-            groupedByShelf[shelfName].forEach(item => {
-                setTimeout(() => {
-                    try {
-                        JsBarcode(`#${item.id}`, String(item.barcode), {
-                            format: "CODE128",
-                            lineColor: "#000",
-                            width: 1.8,
-                            height: 42,
-                            displayValue: true, 
-                            fontSize: 13,
-                            margin: 2
-                        });
-                    } catch (e) {
-                        document.getElementById(item.id).outerHTML = `<span style="color:var(--7e-red); font-size:12px;">Mã lỗi: ${item.barcode}</span>`;
-                    }
-                }, 5);
+            // Vẽ sọc barcode sau khi DOM đã dựng xong hoàn toàn
+            Object.keys(treeData[zoneName]).forEach(shelfName => {
+                treeData[zoneName][shelfName].forEach(item => {
+                    setTimeout(() => {
+                        try {
+                            JsBarcode(`#${item.id}`, String(item.barcode), {
+                                format: "CODE128",
+                                lineColor: "#000",
+                                width: 1.8,
+                                height: 40,
+                                displayValue: true, 
+                                fontSize: 12,
+                                margin: 2
+                            });
+                        } catch (e) {
+                            document.getElementById(item.id).outerHTML = `<span style="color:var(--7e-red); font-size:11px;">Mã lỗi: ${item.barcode}</span>`;
+                        }
+                    }, 5);
+                });
             });
         });
     }
 
     function clearAllList() {
-        if (confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ danh sách tạm của tất cả các kệ không?")) {
+        if (confirm("Xóa toàn bộ cấu trúc sơ đồ kệ tạm thời này?")) {
             scannedList = [];
             localStorage.removeItem('scannedList');
             renderScannedList();
