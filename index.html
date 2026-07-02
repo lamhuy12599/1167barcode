@@ -3,240 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7-Eleven Barcode Scanner & Note</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <title>1167 Trương Định, Ghi Chú & Quét Barcode</title>
+    
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/7-eleven_logo.svg/1280px-7-eleven_logo.svg.png">
+    
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    
     <style>
-        .bg-711-green { background-color: #00843D; }
-        .text-711-green { color: #00843D; }
-        .bg-711-orange { background-color: #EE7203; }
-        .border-711-red { border-color: #EB1A22; }
+        /* CSS Reset & Font */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        
+        /* BIẾN MÀU SẮC CHUẨN 7-ELEVEN */
+        :root {
+            --7e-green: #008062;
+            --7e-orange: #F37021;
+            --7e-red: #E2231A;
+            --bg-main: #F4F5F7;
+            --bg-card: #ffffff;
+            --text-main: #333;
+            --text-muted: #666;
+            --border-color: #eee;
+            --input-bg: #fff;
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #f1f1f1;
+            --text-muted: #aaa;
+            --border-color: #333;
+            --input-bg: #2c2c2c;
+        }
+
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; padding: 20px 10px; transition: 0.3s; }
+        
+        .app-container { width: 100%; max-width: 480px; background: var(--bg-card); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); overflow: hidden; transition: 0.3s; }
+
+        /* Header chuẩn 7-Eleven */
+        .app-header { background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; padding: 15px 15px; border-bottom: 1px solid var(--border-color); position: relative; }
+        .app-header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: linear-gradient(to right, var(--7e-green) 33%, var(--7e-red) 33%, var(--7e-red) 66%, var(--7e-orange) 66%); }
+        
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .app-logo { height: 32px; width: auto; object-fit: contain; }
+        .app-header h2 { color: var(--7e-green); font-size: 19px; font-weight: 800; }
+        
+        .theme-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; border-radius: 50%; }
+
+        .app-body { padding: 20px; }
+        .status-bar { text-align: center; font-size: 13px; font-weight: 600; padding: 8px; border-radius: 6px; margin-bottom: 20px; background: #e8f5e9; color: var(--7e-green); }
+
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: block; }
+        input { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 15px; background: var(--input-bg); color: var(--text-main); transition: 0.3s; }
+        input:focus { border-color: var(--7e-green); outline: none; }
+
+        .btn { width: 100%; padding: 14px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-scan { background-color: var(--7e-orange); }
+        .btn-scan:hover { background-color: #d6611a; }
+        
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+
+        /* Danh sách tạm (Làm lại theo style Lịch sử tra cứu cũ nhưng tối ưu hiển thị Barcode sọc) */
+        .history-section { margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 15px; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .history-header h3 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
+        .btn-clear-history { background: none; border: none; color: var(--7e-red); font-size: 13px; cursor: pointer; font-weight: bold; }
+        
+        .history-list { list-style: none; max-height: 400px; overflow-y: auto; }
+        .history-item { background: var(--input-bg); border: 1px solid var(--border-color); margin-bottom: 10px; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        
+        .item-info { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted var(--border-color); padding-bottom: 6px; }
+        .hist-name { font-weight: 700; font-size: 15px; color: var(--text-main); max-width: 75%; }
+        .hist-count { font-size: 11px; background: var(--border-color); color: var(--text-muted); padding: 2px 6px; border-radius: 20px; font-weight: bold; }
+        
+        /* Container bọc hình sọc mã vạch */
+        .barcode-box { background: white; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #eee; width: 100%; display: flex; justify-content: center; }
+        .barcode-box svg { max-width: 100%; height: auto; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans pb-10">
+<body>
 
-    <header class="bg-711-green text-white p-4 shadow-md sticky top-0 z-50 rounded-b-2xl">
-        <div class="container mx-auto flex justify-between items-center px-2">
-            <h1 class="text-xl font-bold tracking-wider flex items-center gap-2">
-                <span class="bg-white text-711-green px-2 py-0.5 rounded-md font-black text-2xl">7</span> 
-                <span>QUÉT MÃ & GHI CHÚ</span>
-            </h1>
-            <span class="text-xs bg-711-orange px-3 py-1 rounded-full font-semibold shadow">Hệ thống tạm</span>
+<div class="app-container">
+    <div class="app-header">
+        <div class="header-left">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/40/7-eleven_logo.svg" alt="7-Eleven Logo" class="app-logo">
+            <h2>1167 Trương Định</h2>
         </div>
-    </header>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</button>
+    </div>
 
-    <main class="container mx-auto max-w-md p-4 mt-4 space-y-4">
-        
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-t-4 border-711-red space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Quét hoặc Nhập Barcode</label>
-                <div class="flex gap-2">
-                    <input type="text" id="barcodeInput" placeholder="Đặt con trỏ vào đây để quét..." 
-                           class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-711-green transition">
-                    <button onclick="toggleCamera()" class="bg-711-green hover:bg-emerald-700 text-white p-3 rounded-xl shadow transition flex items-center justify-center">
-                        📷
-                    </button>
-                </div>
-            </div>
+    <div class="app-body">
+        <div id="loadingStatus" class="status-bar">🔄 Đang đồng bộ máy chủ...</div>
 
-            <div id="cameraContainer" class="hidden border border-gray-200 rounded-xl overflow-hidden bg-black relative">
-                <div id="reader" class="w-full"></div>
-                <button onclick="toggleCamera()" class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-lg z-10">Đóng Cam</button>
-            </div>
-
-            <div class="relative flex py-1 items-center">
-                <div class="flex-grow border-t border-gray-200"></div>
-                <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase">Hoặc chọn nhanh</span>
-                <div class="flex-grow border-t border-gray-200"></div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Chọn Tên Sản Phẩm (Dropdown)</label>
-                <select id="productDropdown" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-711-green bg-white transition">
-                    <option value="">-- Chọn sản phẩm có sẵn --</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label>Mã Vạch Sản Phẩm</label>
+            <input type="text" id="barcodeInput" placeholder="Nhập mã hoặc quét camera...">
+            <button class="btn btn-scan" onclick="startScan()">📷 BẬT MÁY QUÉT</button>
+            <div id="reader"></div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
-                <h2 class="font-bold text-gray-800 text-lg flex items-center gap-1.5">
-                    Danh sách tạm <span id="itemCount" class="text-sm bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">0</span>
-                </h2>
-                <button onclick="clearAll()" class="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 bg-red-50 p-2 rounded-lg transition">
-                    🗑️ Xóa tất cả
-                </button>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="text-gray-500 border-b border-gray-100">
-                            <th class="py-2 pl-2">Mã Barcode (Sọc quét)</th>
-                            <th class="py-2">Tên sản phẩm</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportTableBody" class="divide-y divide-gray-50">
-                        </tbody>
-                </table>
-            </div>
+        <div class="form-group">
+            <label>Tên Sản Phẩm (Dropdown Chọn nhanh)</label>
+            <input list="productDataList" id="nameInput" placeholder="Nhập tên sản phẩm để chọn nhanh...">
+            <datalist id="productDataList"></datalist>
         </div>
-    </main>
 
-    <script>
-        // CONFIG: Thay link CSV từ Google Sheet của bạn vào đây
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSx0eOzjqqt0D2GPzvaSgppmiJvKaHf_spnk3V8qGr4Pb71IEpNIxjMIQg_UHcnNLUNOLyk0Kab0ttV/pubhtml';
+        <div class="history-section">
+            <div class="history-header">
+                <h3>Danh sách tạm (<span id="itemCount">0</span>)</h3>
+                <button class="btn-clear-history" onclick="clearAllList()">🗑️ Xóa tất cả</button>
+            </div>
+            <ul class="history-list" id="scannedListContainer">
+                </ul>
+        </div>
+    </div>
+</div>
 
-        let productDatabase = {}; 
-        let scannedList = JSON.parse(localStorage.getItem('scannedList')) || [];
-        let html5QrcodeScanner = null;
+<script>
+    // Link Google Sheet API Apps Script của bạn
+    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzqLh2BkY03a_U8edoXOHMo_n4RM4sLwpbiaR0YCHStiNRV3DDIN4pQS2M2CmuM7vQcQg/exec"; 
+    
+    let products = []; 
+    let html5QrCode; 
+    let scannedList = JSON.parse(localStorage.getItem('scannedList')) || [];
 
-        async function loadDatabase() {
-            try {
-                const response = await fetch(GOOGLE_SHEET_CSV_URL);
-                const data = await response.text();
-                parseCSV(data);
-            } catch (error) {
-                console.error("Chưa cấu hình Google Sheet hoặc lỗi kết nối. Đang dùng db demo.", error);
-                parseCSV("Barcode,TenSanPham\n8934563123456,Mì Ly Cung Đình\n8935001234567,Nước Ngọt Coca-Cola\n8934822123456,Bánh Bao 7-Eleven");
-            }
-        }
+    // --- DARK/LIGHT THEME ---
+    function initTheme() {
+        const savedTheme = localStorage.getItem('appTheme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeIcon').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+    
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('appTheme', newTheme);
+        document.getElementById('themeIcon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
+    }
 
-        function parseCSV(csvText) {
-            const lines = csvText.split('\n');
-            const dropdown = document.getElementById('productDropdown');
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i]) continue;
-                const columns = lines[i].split(',');
-                const barcode = columns[0].trim();
-                const name = columns[1]?.trim();
-
-                if (barcode && name) {
-                    productDatabase[barcode] = name;
-                    let option = document.createElement('option');
-                    option.value = barcode;
-                    option.textContent = `${name} (${barcode})`;
-                    dropdown.appendChild(option);
-                }
-            }
-        }
-
-        // Xử lý khi nhập bằng tay/máy quét phần cứng qua cổng USB
-        document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const barcode = this.value.trim();
-                if (barcode) {
-                    addItemToList(barcode);
-                    this.value = '';
-                }
-            }
-        });
-
-        // Xử lý khi chọn từ Dropdown
-        document.getElementById('productDropdown').addEventListener('change', function() {
-            const barcode = this.value;
-            if (barcode) {
-                addItemToList(barcode);
-                this.value = ''; 
-            }
-        });
-
-        // Bật / Tắt Camera để quét mã vạch bằng điện thoại
-        function toggleCamera() {
-            const container = document.getElementById('cameraContainer');
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                
-                html5QrcodeScanner = new Html5Qrcode("reader");
-                html5QrcodeScanner.start(
-                    { facingMode: "environment" }, 
-                    {
-                        fps: 10,
-                        qrbox: (width, height) => {
-                            return { width: width * 0.8, height: height * 0.4 } 
-                        }
-                    },
-                    (decodedText) => {
-                        addItemToList(decodedText);
-                        toggleCamera(); 
-                    },
-                    (errorMessage) => { }
-                ).catch(err => {
-                    alert("Không thể truy cập Camera: " + err);
-                    container.classList.add('hidden');
-                });
-            } else {
-                container.classList.add('hidden');
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.stop().then(() => {
-                        html5QrcodeScanner = null;
-                    });
-                }
-            }
-        }
-
-        function addItemToList(barcode) {
-            const name = productDatabase[barcode] || "Sản phẩm mới (Chưa có trong DB)";
-            const uniqueId = 'bc_' + Math.random().toString(36).substr(2, 9);
-
-            scannedList.unshift({ id: uniqueId, barcode, name });
-            localStorage.setItem('scannedList', JSON.stringify(scannedList));
-            renderTable();
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('reportTableBody');
-            const countBadge = document.getElementById('itemCount');
-            tbody.innerHTML = '';
-            countBadge.textContent = scannedList.length;
-
-            if(scannedList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" class="text-center py-6 text-gray-400 italic">Chưa có sản phẩm nào được quét</td></tr>`;
-                return;
-            }
-
-            scannedList.forEach(item => {
-                let row = `
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-2 pl-2 align-middle">
-                            <svg id="${item.id}"></svg>
-                        </td>
-                        <td class="py-2 font-medium text-gray-800 align-middle">${item.name}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-
-                setTimeout(() => {
-                    try {
-                        JsBarcode(`#${item.id}`, item.barcode, {
-                            format: "CODE128", 
-                            width: 1.5,
-                            height: 40,
-                            displayValue: true, 
-                            fontSize: 12,
-                            margin: 4
-                        });
-                    } catch(e) {
-                        document.getElementById(item.id).outerHTML = `<span class="text-xs font-mono text-red-500">${item.barcode} (Lỗi định dạng mã)</span>`;
-                    }
-                }, 5);
+    // --- KẾT NỐI DATABASE GOOGLE SHEET (Dữ liệu gốc) ---
+    async function loadDatabaseFromSheet() {
+        const statusDiv = document.getElementById('loadingStatus');
+        try {
+            const response = await fetch(GOOGLE_SHEET_API);
+            products = await response.json();
+            
+            const datalist = document.getElementById('productDataList');
+            datalist.innerHTML = ""; 
+            products.forEach(p => {
+                let option = document.createElement('option');
+                option.value = p.ProductName;
+                datalist.appendChild(option);
             });
+            
+            statusDiv.style.background = "#e8f5e9";
+            statusDiv.style.color = "var(--7e-green)";
+            statusDiv.innerText = "✅ Kết nối Database thành công!";
+            setTimeout(() => { statusDiv.style.display = "none"; }, 2500); 
+        } catch (error) {
+            statusDiv.style.background = "#ffebee";
+            statusDiv.style.color = "var(--7e-red)";
+            statusDiv.innerText = "❌ Lỗi kết nối máy chủ / Dùng DB mẫu";
+            
+            // Database dự phòng nếu lỗi kết nối
+            products = [
+                {Barcode: "8934563123456", ProductName: "Mì Ly Cung Đình"},
+                {Barcode: "8935001234567", ProductName: "Nước Ngọt Coca-Cola"}
+            ];
         }
+    }
 
-        function clearAll() {
-            if(confirm("Bạn có chắc chắn muốn xóa toàn bộ danh sách tạm không?")) {
-                scannedList = [];
-                localStorage.removeItem('scannedList');
-                renderTable();
+    // --- XỬ LÝ SỰ KIỆN NHẬP LIỆU ---
+    // 1. Khi gõ tay hoặc dùng súng quét quét vào ô Barcode (Nhấn Enter)
+    document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const barcode = this.value.trim();
+            if (barcode) {
+                const found = products.find(p => String(p.Barcode) === barcode);
+                const name = found ? found.ProductName : "Sản phẩm mới (Không có trong DB)";
+                addItemToList(barcode, name);
+                this.value = '';
             }
         }
+    });
 
-        window.onload = function() {
-            loadDatabase();
-            renderTable();
+    // 2. Khi chọn sản phẩm từ ô Dropdown Tên sản phẩm
+    document.getElementById('nameInput').addEventListener('input', function() {
+        const nameVal = this.value.trim();
+        const found = products.find(p => p.ProductName.toLowerCase() === nameVal.toLowerCase());
+        if (found) {
+            addItemToList(String(found.Barcode), found.ProductName);
+            this.value = ''; // Reset ô nhập ngay lập tức
             document.getElementById('barcodeInput').focus();
         }
-    </script>
+    });
+
+    // --- CAMERA QUET MÃ ---
+    function startScan() {
+        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 15, qrbox: { width: 280, height: 100 } };
+
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config,
+            (decodedText) => {
+                const found = products.find(p => String(p.Barcode) === decodedText);
+                const name = found ? found.ProductName : "Sản phẩm mới (Không có trong DB)";
+                addItemToList(decodedText, name);
+                
+                html5QrCode.stop().then(() => {
+                    document.getElementById('reader').innerHTML = ""; 
+                });
+            },
+            (errorMessage) => { }
+        ).catch(err => {
+            alert("Vui lòng cấp quyền Camera và sử dụng link HTTPS!");
+        });
+    }
+
+    // --- QUẢN LÝ DANH SÁCH TẠM ---
+    function addItemToList(barcode, name) {
+        const uniqueId = 'bc_' + Math.random().toString(36).substr(2, 9);
+        
+        // Đẩy lên đầu danh sách tạm
+        scannedList.unshift({ id: uniqueId, barcode: barcode, name: name });
+        localStorage.setItem('scannedList', JSON.stringify(scannedList));
+        renderScannedList();
+    }
+
+    function renderScannedList() {
+        const listEl = document.getElementById('scannedListContainer');
+        const countEl = document.getElementById('itemCount');
+        listEl.innerHTML = "";
+        
+        countEl.innerText = scannedList.length;
+
+        if (scannedList.length === 0) {
+            listEl.innerHTML = "<li style='text-align:center; color:#aaa; font-size:13px; padding: 20px 0;'>Chưa có sản phẩm nào được quét</li>";
+            return;
+        }
+
+        scannedList.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `
+                <div class="item-info">
+                    <span class="hist-name">${item.name}</span>
+                    <span class="hist-count">#${scannedList.length - index}</span>
+                </div>
+                <div class="barcode-box">
+                    <svg id="${item.id}"></svg>
+                </div>
+            `;
+            listEl.appendChild(li);
+
+            // Vẽ sọc barcode hoàn chỉnh bằng thư viện JsBarcode
+            setTimeout(() => {
+                try {
+                    JsBarcode(`#${item.id}`, String(item.barcode), {
+                        format: "CODE128",
+                        lineColor: "#000",
+                        width: 1.8,
+                        height: 45,
+                        displayValue: true, // Hiển thị số nhỏ dưới chân sọc
+                        fontSize: 13,
+                        margin: 2
+                    });
+                } catch (e) {
+                    document.getElementById(item.id).outerHTML = `<span style="color:var(--7e-red); font-size:12px; font-mono">Mã lỗi: ${item.barcode}</span>`;
+                }
+            }, 5);
+        });
+    }
+
+    function clearAllList() {
+        if (confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ danh sách ghi chú tạm không?")) {
+            scannedList = [];
+            localStorage.removeItem('scannedList');
+            renderScannedList();
+        }
+    }
+
+    // --- KHỞI CHẠY ---
+    window.onload = () => {
+        initTheme();
+        renderScannedList();
+        loadDatabaseFromSheet();
+    };
+</script>
 </body>
 </html>
